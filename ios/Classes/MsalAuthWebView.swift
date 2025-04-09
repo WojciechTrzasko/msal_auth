@@ -61,7 +61,7 @@ public class MsalAuthWebView: NSObject, FlutterPlatformView {
             scopes: scopes,
             promptType: .login,
             loginHint: nil,
-            customWebview: webView,
+            customWebView: webView,
             result: { _ in
             }
         )
