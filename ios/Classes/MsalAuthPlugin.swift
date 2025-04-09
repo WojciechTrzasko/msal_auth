@@ -2,6 +2,8 @@ import Flutter
 import MSAL
 import UIKit
 
+
+
 /// This is the main entry point for the Flutter plugin.
 /// It manages the method calls from Flutter & sets results accordingly.
 public class MsalAuthPlugin: NSObject, FlutterPlugin {
@@ -9,9 +11,17 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
     /// Initializes method channel and register method call delegate.
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
-            name: "msal_auth", binaryMessenger: registrar.messenger())
+            name: "msal_auth",
+            binaryMessenger: registrar.messenger()
+        )
         let instance = MsalAuthPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        
+        let webViewFactory = MsalAuthWebViewFactory(
+            messenger: registrar.messenger(),
+            plugin: instance
+        )
+        registrar.register(webViewFactory, withId: "msal_auth_web_view")
     }
 
     /// Handles method calls received from Dart.
@@ -65,8 +75,12 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
             let loginHint = dict["loginHint"] as? String
 
             acquireToken(
-                scopes: scopes, promptType: promptType, loginHint: loginHint,
-                result: result)
+                scopes: scopes,
+                promptType: promptType,
+                loginHint: loginHint,
+                customWebView: nil,
+                result: result
+            )
         case "acquireTokenSilent":
             guard let dict = call.arguments as? NSDictionary,
                 let scopes = dict["scopes"] as? [String]
@@ -174,8 +188,11 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
     ///   - promptType: Prompt type.
     ///   - loginHint: Login hint.
     ///   - result: Result of the method call.
-    private func acquireToken(
-        scopes: [String], promptType: MSALPromptType, loginHint: String?,
+    internal func acquireToken(
+        scopes: [String],
+        promptType: MSALPromptType,
+        loginHint: String?,
+        customWebView: WKWebView?,
         result: @escaping FlutterResult
     ) {
         guard let pca = MsalAuth.publicClientApplication else {
@@ -195,6 +212,7 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
             switch MsalAuth.broker {
             case "webView":
                 webViewParameters.webviewType = .wkWebView
+                webViewParameters.customWebview = customWebView
                 MSALGlobalConfig.brokerAvailability = .none
             case "safariBrowser":
                 webViewParameters.webviewType = .safariViewController
