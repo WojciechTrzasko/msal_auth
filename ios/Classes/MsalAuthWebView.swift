@@ -58,7 +58,13 @@ public class MsalAuthWebView: NSObject, FlutterPlatformView {
             let scopes = args?["scopes"] as? [String],
             let prompt = args?["prompt"] as? String
         else {
-            // TODO(wtrzasko): Throw error?
+            let errorArguments: [String: Any] = [
+                "code": "INTERNAL_ERROR",
+                "message": "Invalid data has been provided to MsalAuthWebView.",
+                "details": "invalid_data"
+            ]
+            
+            channel?.invokeMethod("onAuthError", arguments: errorArguments)
             return
         }
         
@@ -71,7 +77,12 @@ public class MsalAuthWebView: NSObject, FlutterPlatformView {
             customWebView: webView,
             result: { [weak channel] result in
                 if let error = result as? FlutterError {
-                    channel?.invokeMethod("onAuthError", arguments: nil)
+                    let errorArguments: [String: Any] = [
+                        "code": error.code,
+                        "message": error.message ?? "",
+                        "details": error.details ?? ""
+                    ]
+                    channel?.invokeMethod("onAuthError", arguments: errorArguments)
                 } else {
                     channel?.invokeMethod("onAuthFinished", arguments: nil)
                 }
