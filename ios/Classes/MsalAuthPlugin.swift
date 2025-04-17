@@ -56,23 +56,14 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
         case "acquireToken":
             guard let dict = call.arguments as? NSDictionary,
                 let scopes = dict["scopes"] as? [String],
-                let prompt = dict["prompt"] as? String,
-                let promptType: MSALPromptType = {
-                    switch prompt {
-                    case "selectAccount": return .selectAccount
-                    case "login": return .login
-                    case "consent": return .consent
-                    case "create": return .create
-                    case "whenRequired": return .promptIfNecessary
-                    default: return .default
-                    }
-                }()
+                let prompt = dict["prompt"] as? String
             else {
                 setInternalError(methodName: call.method, result: result)
                 return
             }
 
             let loginHint = dict["loginHint"] as? String
+            let promptType = parse(prompt: prompt)
 
             acquireToken(
                 scopes: scopes,
@@ -463,6 +454,17 @@ extension MsalAuthPlugin {
         accountDic["username"] = account.username
         accountDic["name"] = account.accountClaims?["name"]
         return accountDic
+    }
+    
+    internal func parse(prompt: String) ->  MSALPromptType {
+        switch prompt {
+            case "selectAccount": return .selectAccount
+            case "login": return .login
+            case "consent": return .consent
+            case "create": return .create
+            case "whenRequired": return .promptIfNecessary
+            default: return .default
+        }
     }
 }
 
