@@ -61,9 +61,9 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
                 setInternalError(methodName: call.method, result: result)
                 return
             }
-
+            
+            let promptType: MSALPromptType = parse(prompt: prompt)
             let loginHint = dict["loginHint"] as? String
-            let promptType = parse(prompt: prompt)
 
             acquireToken(
                 scopes: scopes,
@@ -400,7 +400,7 @@ public class MsalAuthPlugin: NSObject, FlutterPlugin {
     }
 
     /// Removes account from public client application. used with multiple account mode.
-    /// - Parameters: 
+    /// - Parameters:
     ///   - identifier: Account identifier.
     ///   - result: Result of the method call.
     private func removeAccount(
@@ -455,8 +455,11 @@ extension MsalAuthPlugin {
         accountDic["name"] = account.accountClaims?["name"]
         return accountDic
     }
-    
-    internal func parse(prompt: String) ->  MSALPromptType {
+}
+
+// MARK: - MsalAuthPlugin
+extension MsalAuthPlugin {
+    internal func parse(prompt: String) -> MSALPromptType {
         switch prompt {
             case "selectAccount": return .selectAccount
             case "login": return .login
@@ -466,10 +469,7 @@ extension MsalAuthPlugin {
             default: return .default
         }
     }
-}
-
-// MARK: - MsalAuthPlugin
-extension MsalAuthPlugin {
+    
     /// Sets internal error to result due to provided invalid data from Dart.
     /// - Parameters:
     ///   - methodName: Method name.
